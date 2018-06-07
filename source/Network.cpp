@@ -144,5 +144,4 @@ void 	Network::ClearBuffer()
 Network::~Network()
 {
 	close(sockfd);
-	free(server);
 }

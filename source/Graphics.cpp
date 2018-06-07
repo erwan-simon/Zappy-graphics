@@ -31,6 +31,48 @@ bool 	Graphics::Play()
 	return true;
 }
 
+bool						Graphics::Ok(std::string &)
+{
+	return true;
+}
+
+bool						Graphics::Error(std::string & value)
+{
+	try {
+		std::cerr << "Error: " << value.substr(4) << std::endl;
+	}
+	catch (std::out_of_range& e)
+	{
+		std::cerr << "Error: no message given..." << std::endl;
+	}
+	throw 4;
+}
+
+bool						Graphics::Exit(std::string & value)
+{
+	try {
+		std::cerr << "Server disconnected itself: " << value.substr(4) << std::endl;
+	}
+	catch (std::out_of_range& e)
+	{
+		std::cerr << "Server disconnected itself." << std::endl;
+	}
+	throw 5;
+}
+
+bool						Graphics::ServerWelcome(std::string & value)
+{
+	try {
+		std::cout << "Server accepted connection : " << value.substr(4) << std::endl;
+	}
+	catch (std::out_of_range &e)
+	{
+		std::cout << "Server accepted connection !" << std::endl;
+	}
+	this->network.SendMessage("301\n");
+	return true;
+}
+
 bool 						Graphics::ReceiveBoard(std::string &argument)
 {
 	std::string::iterator 	it = std::next(argument.begin(), 5);
@@ -46,6 +88,11 @@ bool 						Graphics::ReceiveBoard(std::string &argument)
 	}
 	if (level != 3)
 		return false;
+	return true;
+}
+
+bool	Graphics::ReceiveInventory(std::string &)
+{
 	return true;
 }
 

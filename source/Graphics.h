@@ -21,11 +21,21 @@ class 								Graphics {
 		void						DrawBoard();
 		void 						AskForUpdate();
 
+		bool						Ok(std::string & value);
+		bool						Error(std::string & value);
+		bool						Exit(std::string & value);
+		bool						ServerWelcome(std::string & value);
 		bool						ReceiveBoard(std::string & value);
+		bool						ReceiveInventory(std::string & value);
 
   		std::map<std::string, bool (Graphics::*)(std::string &)> protocol = {
-		    { "101", &Graphics::ReceiveBoard }
-  		};
+			{ "001", &Graphics::Ok },
+			{ "002", &Graphics::Error },
+			{ "003", &Graphics::Exit },
+			{ "100", &Graphics::ServerWelcome },
+		    { "101", &Graphics::ReceiveBoard },
+  			{ "103", &Graphics::ReceiveInventory },
+		};
 };
 
 #endif /* GRAPHICS_H_ */
