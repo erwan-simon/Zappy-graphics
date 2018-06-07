@@ -7,7 +7,7 @@ RM	= rm -f
 SRCS	= ./source/main.cpp		\
 		  ./source/Network.cpp	\
 		  ./source/MyNcurses.cpp\
-		  ./source/Protocol.cpp
+		  ./source/Graphics.cpp
 
 OBJS	= $(SRCS:.cpp=.o)
 

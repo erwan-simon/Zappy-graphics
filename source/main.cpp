@@ -1,22 +1,6 @@
-#include <cstdlib>
-#include <iostream>
-#include <chrono>
-#include <thread>
-#include "Network.h"
-
 #include <cstdio>
-#include <cstring>
-#include <string>
 #include <iostream>
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <string.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <netdb.h>
-#include "Network.h"
+#include "Graphics.h"
 
 int main(int argc, char *argv[])
 {
@@ -26,14 +10,8 @@ int main(int argc, char *argv[])
 		return 1;
 	}
 	try {
-		Network *network = new Network(argv[1], std::atoi(argv[2]));
-		while (1)
-		{
-			std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-			if (network->ReadFromServer() == false)
-				break;
-		}
-		delete network;
+		Graphics graphics(std::atoi(argv[2]), argv[1]);
+		graphics.Play();
 	} catch (int e)
 	{
 		std::cerr << "Something happened. Exiting..." << std::endl;

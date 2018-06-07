@@ -1,5 +1,11 @@
+#include <iostream>
 #include <string>
+#include <chrono>
+#include <thread>
+#include "Network.h"
 #include "Graphics.h"
+
+
 
 Graphics::Graphics(int port, char *addr) :
 	network(addr, port)
@@ -7,16 +13,29 @@ Graphics::Graphics(int port, char *addr) :
 	network.SendMessage(std::string("300\n"));
 }
 
-bool						Graphics::ParseArguments(std::string &argument)
+bool 	Graphics::Play()
+{
+	while (1)
+	{
+		std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+		if (this->network.ReadFromServer() == false)
+			break;
+		if (this->network.GetBuffer().size() != 0)
+		{
+			for (auto & message : this->network.GetBuffer())
+				this->ParseArguments(message);
+			this->network.ClearBuffer();
+			this->DrawBoard();
+		}
+	}
+	return true;
+}
+
+bool 						Graphics::ReceiveBoard(std::string &argument)
 {
 	std::string::iterator 	it = std::next(argument.begin(), 5);
 	int 					level = 0;
-	int 					protocol = 0;
 
-	if (std::atoi(argument.substr(0, 3).c_str()) == 0)
-		return false;
-	else
-		protocol = std::atoi(argument.substr(0, 3).c_str());
 	while (*it == '[')
 	{
 		if (*it == '[')
@@ -25,13 +44,27 @@ bool						Graphics::ParseArguments(std::string &argument)
 			++it;
 		}
 	}
-	if (level == 0)
+	if (level != 3)
 		return false;
-	while (level != 0)
-	{
-		level -= 1;
-	}
 	return true;
+}
+
+bool	Graphics::ParseArguments(std::string &argument)
+{
+	try {
+		if (this->protocol.find(argument.substr(0, 3)) != this->protocol.end())
+			return ((this->*protocol[argument.substr(0, 3)])(argument));
+		else
+		{
+			std::cerr << argument.substr(0, 3) << ": protocol unknown." << std::endl;
+			return false;
+		}
+	}
+	catch (std::out_of_range& e)
+	{
+		std::cerr << argument << "\nNo protocol number found..." << std::endl;
+		return false;
+	}
 }
 
 void 	Graphics::DrawBoard()
