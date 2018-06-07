@@ -17,11 +17,13 @@ You have 3 submodules to this project, each of them communicating via unix socke
 #### The Server
 
 The server is the main actor if this project. It hosts all the game mechanics. Only him has the knowledge of the "rules", how the game means to be played.
+You can find it [here](https://github.com/erwan-simon/Zappy-server).
 
 #### The Client
 
 The client will connect to the server and represent a player, a beeing in the artificial world. Like anyone of us, humans, it doesn't have any obvious purpose other than survive.
 The AI script will lie in this part.
+You can find it [here](https://github.com/erwan-simon/Zappy-client).
 
 #### The Graphics
 
