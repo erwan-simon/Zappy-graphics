@@ -7,7 +7,10 @@ RM	= rm -f
 SRCS	= ./source/main.cpp		\
 		  ./source/Network.cpp	\
 		  ./source/MyNcurses.cpp\
-		  ./source/Graphics.cpp
+		  ./source/Graphics.cpp	\
+		  ./source/Map.cpp 		\
+		  ./source/Box.cpp 		\
+		  ./source/Character.cpp
 
 OBJS	= $(SRCS:.cpp=.o)
 
