@@ -77,7 +77,7 @@ bool 	Map::FillBoard(std::string &board_string)
     try
     {
 	int x = 0, y = 0;
-	std::string::iterator it = std::next(board_string.begin(), 4);
+	std::string::iterator it = board_string.begin();
 
 	++it;
 	while (*it != ']')
@@ -116,7 +116,48 @@ bool 	Map::FillBoard(std::string &board_string)
     }
     catch (std::out_of_range &e)
     {
-	std::cerr << "Can't parse board sent by server." << std::endl;
+	std::cerr << "Can't parse board sent by the server." << std::endl;
+	return false;
+    }
+}
+
+bool 	Map::FillCharacters(std::string &board_string)
+{
+    try
+    {
+	std::string::iterator it = std::next(board_string.begin(), 4);
+
+	++it;
+	while (*it != ']')
+	{
+	    ++it;
+	    std::string character_args;
+	    while (*it != ']')
+		character_args += *it;
+	    Character new_character(character_args, *this);
+	    bool here = false;
+	    for (auto & character : this->characters)
+	    {
+		if (character.GetId() == new_character.GetId())
+		{
+		    character = new_character;
+		    here = true;
+		}
+	    }
+	    if (here == false)
+		this->characters.push_back(new_character);
+	    ++it;
+	}
+	return true;
+    }
+    catch (std::out_of_range &e)
+    {
+	this->characters.clear();
+	return true;
+    }
+    catch (...)
+    {
+	std::cerr << "Can't parse characters sent by the server." << std::endl;
 	return false;
     }
 }

@@ -1,7 +1,7 @@
 #include <ncurses.h>
 #include "MyNcurses.h"
 
-void	MyNcurses::OpenWindow(const int &x, const int &y)
+void	MyNcurses::OpenWindow(int x, int y)
 {
   initscr();
   cbreak();
@@ -18,7 +18,7 @@ void	MyNcurses::OpenWindow(const int &x, const int &y)
   init_pair(5, COLOR_MAGENTA, COLOR_MAGENTA);
   init_pair(6, COLOR_GREEN, COLOR_GREEN);
   curs_set(0);
-  this->win = newwin(y, x, 0, 0);
+  this->win = newwin(y, x * 2, 0, 0);
 }
 
 void	MyNcurses::RefreshWindow()
@@ -33,9 +33,10 @@ void	MyNcurses::ClearWindow()
 
 void	MyNcurses::CloseWindow()
 {
-  delwin(this->win);
-  curs_set(1);
-  endwin();
+    nocbreak();
+    delwin(this->win);
+    curs_set(1);
+    endwin();
 }
 
 MyNcurses::e_key	MyNcurses::GetKey() const
@@ -69,14 +70,14 @@ MyNcurses::e_key	MyNcurses::GetKey() const
   return (MyNcurses::E_NONE);
 }
 
-void	MyNcurses::BuildCell(const int &x, const int &y, const MyNcurses::e_color &col)
+void	MyNcurses::BuildCell(int x, int y, const MyNcurses::e_color &col)
 {
   attron(COLOR_PAIR(col));
   mvprintw(y, (x * 2), "OO");
   attroff(COLOR_PAIR(col));
 }
 
-void		MyNcurses::WriteStuff(const int &x, const int &y, const std::string &text)
+void		MyNcurses::WriteStuff(int x, int y, const std::string &text)
 {
   unsigned int	a = 0;
 

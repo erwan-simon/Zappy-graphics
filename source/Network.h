@@ -11,7 +11,7 @@ class 					Network {
 	Network(char *addr, int port);
 	~Network();
 
-	bool				ReadFromServer();
+	bool				ReadFromServer(bool blocking = false);
 	bool 				SendMessage(std::string const & message);
 	bool 				ReceiveMessage();
 	std::vector<std::string> &	GetBuffer();

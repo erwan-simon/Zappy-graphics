@@ -6,29 +6,61 @@
 #include "Network.h"
 #include "Graphics.h"
 #include "Map.h"
-
+#include "MyNcurses.h"
 
 Graphics::Graphics(int port, char *addr) :
     network(addr, port)
 {
-    network.SendMessage(std::string("300\n"));
+    ;
+    // Get the size of the board
+    if (this->network.SendMessage(std::string("300\n")) == false ||
+	    this->network.ReadFromServer(true) == false ||
+	    this->network.GetBuffer().size() == 0 ||
+	    this->ServerWelcome(*(this->network.GetBuffer().begin())) == false ||
+	    this->map == NULL)
+    {
+        this->network.SendMessage(std::string("003 Got an error need to shut down.\n"));
+	throw std::string("Can't get the map size from the server");
+    }
+    this->network.ClearBuffer();
+    this->ncurse.OpenWindow(this->map->GetSizeX(), this->map->GetSizeY());
+    // Get board
+    if (network.SendMessage(std::string("301\n")) == false ||
+	    this->network.ReadFromServer(true) == false ||
+	    this->network.GetBuffer().size() == 0 ||
+	    this->ReceiveBoard(*(this->network.GetBuffer().begin())) == false)
+    {
+        this->network.SendMessage(std::string("003 Got an error need to shut down.\n"));
+	this->ncurse.CloseWindow();
+	throw std::string("Can't get the board contents from the server");
+    }
+    this->network.ClearBuffer();
+    // get characters
+    if (network.SendMessage(std::string("302\n")) == false ||
+	    this->network.ReadFromServer(true) == false ||
+	    this->network.GetBuffer().size() == 0 ||
+	    this->ReceiveCharacters(*(this->network.GetBuffer().begin())) == false)
+    {
+        this->network.SendMessage(std::string("003 Got an error need to shut down.\n"));
+	this->ncurse.CloseWindow();
+	throw std::string("Can't get the characters from the server");
+    }
+    this->network.ClearBuffer();
 }
 
 bool 	Graphics::Play()
 {
     while (1)
     {
-	this->AskForUpdate();
 	// std::this_thread::sleep_for(std::chrono::milliseconds(500));
-	if (this->network.ReadFromServer() == false)
+	if (this->AskForUpdate() || this->network.ReadFromServer() == false)
 	    break;
 	if (this->network.GetBuffer().size() != 0)
 	{
 	    for (auto & message : this->network.GetBuffer())
 		this->ParseArguments(message);
 	    this->network.ClearBuffer();
-	    if (map != NULL)
-		this->DrawBoard();
+	    this->DrawBoard();
 	}
     }
     return true;
@@ -43,24 +75,25 @@ bool	Graphics::Error(std::string & value)
 {
     try {
 	std::cerr << "Error: " << value.substr(4) << std::endl;
+        throw value.substr(4);
     }
     catch (std::out_of_range& e)
     {
-	std::cerr << "Error: no message given..." << std::endl;
+	throw std::string("Server send an error code without explaining why.");
     }
-    throw 4;
 }
 
 bool	Graphics::Exit(std::string & value)
 {
     try {
-	std::cerr << "Server disconnected itself: " << value.substr(4) << std::endl;
+	std::string message = std::string("Server disconnected ");
+	message += value.substr(4);
+	throw message;
     }
     catch (std::out_of_range& e)
     {
-	std::cerr << "Server disconnected itself." << std::endl;
+	throw std::string("Server disconnected itself.");
     }
-    throw 5;
 }
 
 bool	Graphics::ServerWelcome(std::string & value)
@@ -101,7 +134,6 @@ bool	Graphics::ServerWelcome(std::string & value)
 	std::cerr << "Can't obtain map size from server welcome message" << std::endl;
 	return false;
     }
-    this->network.SendMessage("301\n");
     return true;
 }
 
@@ -150,6 +182,27 @@ bool	Graphics::ParseArguments(std::string &argument)
     }
 }
 
+bool    Graphics::ReceiveCharacters(std::string &argument)
+{
+    std::string::iterator   it = std::next(argument.begin(), 4);
+    int			    level = 0;
+    while (*it == '[')
+    {
+	if (*it == '[')
+	{
+	    level += 1;
+	    ++it;
+	}
+    }
+    if (level < 1)
+    {
+	std::cerr << "Wrong level in the sent board" << std::endl;
+	return false;
+    }
+    return (this->map->FillCharacters(argument));
+}
+
+
 void 	Graphics::DrawBoard()
 {
     Box **board_copy = this->map->GetBoard();
@@ -158,20 +211,35 @@ void 	Graphics::DrawBoard()
     {
 	for (int x = 0; x != this->map->GetSizeX(); x += 1)
 	{
-	    if (board_copy[y][x].GetFood() != 0)
+	    bool done = false;
+	    for (const auto &character : this->map->GetCharacters())
 	    {
-		this->ncurse.BuildCell(x, y, MyNcurses::E_RED);
+		if (character.GetLocation()[0] == x && character.GetLocation()[1] == y)
+		{
+		    this->ncurse.BuildCell(x, y, MyNcurses::E_BLUE);
+		    done = true;
+		}
 	    }
+	    if (done == true)
+		continue;
+	    else if (board_copy[y][x].GetFood() != 0)
+		this->ncurse.BuildCell(x, y, MyNcurses::E_RED);
+	    else
+		this->ncurse.BuildCell(x, y, MyNcurses::E_BLACK);
 	}
     }
+    this->ncurse.RefreshWindow();
 }
 
 bool 	Graphics::AskForUpdate()
 {
-    return (this->network.SendMessage(std::string("301")));
+    return (this->network.SendMessage(std::string("301")) &&
+	    this->network.SendMessage(std::string("302")));
 }
 
 Graphics::~Graphics()
 {
-    network.SendMessage(std::string("3\n"));
+    this->ncurse.ClearWindow();
+    this->ncurse.CloseWindow();
+    this->network.SendMessage(std::string("003\n"));
 }

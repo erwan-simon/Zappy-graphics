@@ -30,6 +30,7 @@ class				    Graphics {
 	bool			    ServerWelcome(std::string & value);
 	bool			    ReceiveBoard(std::string & value);
 	bool			    ReceiveInventory(std::string & value);
+	bool			    ReceiveCharacters(std::string & value);
 
 	std::map<std::string, bool (Graphics::*)(std::string &)> protocol = {
 	    { "001", &Graphics::Ok },
@@ -38,6 +39,7 @@ class				    Graphics {
 	    { "100", &Graphics::ServerWelcome },
 	    { "101", &Graphics::ReceiveBoard },
 	    { "103", &Graphics::ReceiveInventory },
+	    { "104", &Graphics::ReceiveCharacters }
 	};
 };
 

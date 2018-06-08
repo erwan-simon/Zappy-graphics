@@ -37,18 +37,18 @@ public:
   ~MyNcurses() {};
   
   // Window
-  virtual void			OpenWindow(const int &x, const int &y);
+  virtual void			OpenWindow(int x, int y);
   virtual void			RefreshWindow();
   virtual void			ClearWindow();
   virtual void			CloseWindow();
   virtual e_key			GetKey() const;
 
   // Draw
-  virtual void			BuildCell(const int &x,
-					  const int &y,
+  virtual void			BuildCell(int x,
+					  int y,
 					  const e_color &col);
-  virtual void			WriteStuff(const int &x,
-					   const int &y,
+  virtual void			WriteStuff(int x,
+					   int y,
 					   const std::string& text);
 
 private:

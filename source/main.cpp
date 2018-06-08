@@ -12,9 +12,9 @@ int main(int argc, char *argv[])
     try {
 	Graphics graphics(std::atoi(argv[2]), argv[1]);
 	graphics.Play();
-    } catch (int e)
+    } catch (std::string e)
     {
-	std::cerr << "Something happened. Exiting..." << std::endl;
+	std::cerr << "Error: " << e << std::endl;
 	return 1;
     }
     return 0;

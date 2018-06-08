@@ -20,7 +20,7 @@ Network::Network(char *addr, int port) :
     if (sockfd < 0)
     {
 	std::perror("socket");
-	throw 1;
+	throw std::string("socket failed");
     }
     server = gethostbyname(addr);
     if (server == NULL) {
@@ -36,7 +36,7 @@ Network::Network(char *addr, int port) :
     if (connect(sockfd, (struct sockaddr *) &serv_addr, sizeof(serv_addr)) < 0)
     {
 	std::perror("connect");
-	throw(3);
+	throw std::string("connect failed");
     }
     FD_ZERO(&active_fd_set);
     FD_SET(sockfd, &active_fd_set);
@@ -52,7 +52,7 @@ bool	Network::SendMessage(std::string const & message)
 	return_value = dprintf(sockfd, "%s\n", message.c_str());
     if (return_value < 0)
     {
-	std::cerr << "Couldn't send message to " << sockfd << "." << std::endl;
+	std::cerr << "Couldn't send message to the server." << std::endl;
 	return false;
     }
     return true;
@@ -72,12 +72,12 @@ bool		Network::ReceiveMessage()
 	{
 	    /* Read error. */
 	    std::perror("read");
-	    throw 2;
+	    throw std::string("read error");
 	}
 	else if (nbytes == 0)
 	{
 	    /* End-of-file. */
-	    std::cout << "Server disconnected" << std::endl;
+	    std::cerr << "Server disconnected" << std::endl;
 	    return false;
 	}
 	else
@@ -92,18 +92,29 @@ bool		Network::ReceiveMessage()
     return true;
 }
 
-bool								Network::ReadFromServer()
+bool		    Network::ReadFromServer(bool blocking)
 {
-    fd_set							read_fd_set;
-    int							i;
-    struct timeval					tv = {0, 50};
+    fd_set	    read_fd_set;
+    int		    i;
+    struct timeval  tv = {0, 50};
 
     /* Block until input arrives on one or more active sockets. */
     read_fd_set = active_fd_set;
-    if (select(FD_SETSIZE, &read_fd_set, NULL, NULL, &tv) < 0)
+    if (blocking)
     {
-	std::perror("select");
-	throw 3;
+	if (select(FD_SETSIZE, &read_fd_set, NULL, NULL, NULL) < 0)
+	{
+	    std::perror("select");
+	    throw std::string("select error");
+	}
+    }
+    else
+    {
+	if (select(FD_SETSIZE, &read_fd_set, NULL, NULL, &tv) < 0)
+	{
+	    std::perror("select");
+	    throw std::string("select error");
+	}
     }
     /* Service all the sockets with input pending. */
     for (i = 0; i < FD_SETSIZE; ++i)
@@ -112,19 +123,13 @@ bool								Network::ReadFromServer()
 	{
 	    if (i == sockfd)
 	    {
-		if (this->ReceiveMessage() == true)
-		    std::cout << "Receive " << buffer.back() << " from " << i << std::endl;
-		else
-		    return false;
+		return(this->ReceiveMessage() == true);
 	    }
 	    else
 	    {
-		std::cout << "else" << std::endl;
+		std::cerr << "else" << std::endl;
 		/* Data arriving on an already-connected socket. */
-		if (this->ReceiveMessage() == true)
-		    std::cout << "Receive " << buffer.back() << " from " << i << std::endl;
-		else
-		    return false;
+		return (this->ReceiveMessage() == true);
 	    }
 	}
     }

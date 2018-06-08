@@ -8,6 +8,7 @@ class Map;
 class 			Character {
     public:
 	Character(int id, Map &map);
+	Character(std::string &args, Map &map);
 	~Character();
 
 	int 		GetId() const;
@@ -15,13 +16,12 @@ class 			Character {
 	void		Setlocation(int x, int y);
 	bool		ConsumeFood();
 	void 		AddFood(int foodNb);
-
 	Character &	operator=(Character const &other);
 
     private:
 	int 		id;
 	Map 		&map;
-	int 		location[2] = {0, 0};
+	int 		location[2] = {0, 0}; // {x, y}
 	int 		food = 5;
 };
 
