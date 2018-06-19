@@ -12,6 +12,7 @@
 #include <netinet/in.h>
 #include <netdb.h>
 #include "Network.h"
+#include "NetworkError.h"
 
 Network::Network(char *addr, int port) :
     port(port)

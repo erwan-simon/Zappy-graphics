@@ -52,26 +52,6 @@ bool 	Map::RemoveCharacter(int id)
     return false;
 }
 
-void	    Map::UpdateCharacters(std::vector<int> const& clients)
-{
-    bool    here;
-
-    std::vector<Character>::iterator it = this->characters.begin();
-    while (it != this->characters.end())
-    {
-	here = false;
-	for (const auto& client : clients)
-	{
-	    if (it->GetId() == client)
-		here = true;
-	}
-	if (here == false)
-	    it = this->characters.erase(it);
-	else
-	    ++it;
-    }
-}
-
 bool 	Map::FillBoard(std::string &board_string)
 {
     try
@@ -125,6 +105,11 @@ bool 	Map::FillCharacters(std::string &board_string)
 {
     try
     {
+	if (board_string.at(1) != '[')
+	{
+	    this->characters.empty();
+	    return true;
+	}
 	std::string::iterator it = std::next(board_string.begin(), 4);
 
 	++it;
@@ -154,11 +139,6 @@ bool 	Map::FillCharacters(std::string &board_string)
     {
 	this->characters.clear();
 	return true;
-    }
-    catch (...)
-    {
-	std::cerr << "Can't parse characters sent by the server." << std::endl;
-	return false;
     }
 }
 

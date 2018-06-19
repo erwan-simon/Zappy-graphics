@@ -13,7 +13,6 @@ class					Map {
 
 	bool				AddCharacter(int id);
 	bool 				RemoveCharacter(int id);
-	void				UpdateCharacters(std::vector<int> const& clients);
 	bool 				FillBoard(std::string &board_string);
 	bool				FillCharacters(std::string &board_string);
 	Box 	 			**GetBoard() const;
