@@ -11,18 +11,16 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <netdb.h>
+#include <errno.h>
 #include "Network.h"
-#include "NetworkError.h"
+#include "Error.h"
 
 Network::Network(char *addr, int port) :
     port(port)
 {
     sockfd = socket(AF_INET, SOCK_STREAM, 0);
     if (sockfd < 0)
-    {
-	std::perror("socket");
-	throw std::string("socket failed");
-    }
+	throw Error(strerror(errno));
     server = gethostbyname(addr);
     if (server == NULL) {
 	fprintf(stderr,"ERROR, no such host\n");
@@ -35,10 +33,7 @@ Network::Network(char *addr, int port) :
       server->h_length);
     serv_addr.sin_port = htons(port);
     if (connect(sockfd, (struct sockaddr *) &serv_addr, sizeof(serv_addr)) < 0)
-    {
-	std::perror("connect");
-	throw std::string("connect failed");
-    }
+	throw Error(strerror(errno));
     FD_ZERO(&active_fd_set);
     FD_SET(sockfd, &active_fd_set);
 }
@@ -70,11 +65,7 @@ bool		Network::ReceiveMessage()
     {
 	nbytes = read(sockfd, &buffer, 1);
 	if (nbytes < 0)
-	{
-	    /* Read error. */
-	    std::perror("read");
-	    throw std::string("read error");
-	}
+            throw Error(strerror(errno));
 	else if (nbytes == 0)
 	{
 	    /* End-of-file. */
@@ -104,18 +95,12 @@ bool		    Network::ReadFromServer(bool blocking)
     if (blocking)
     {
 	if (select(FD_SETSIZE, &read_fd_set, NULL, NULL, NULL) < 0)
-	{
-	    std::perror("select");
-	    throw std::string("select error");
-	}
+            throw Error(strerror(errno));
     }
     else
     {
 	if (select(FD_SETSIZE, &read_fd_set, NULL, NULL, &tv) < 0)
-	{
-	    std::perror("select");
-	    throw std::string("select error");
-	}
+            throw Error(strerror(errno));
     }
     /* Service all the sockets with input pending. */
     for (i = 0; i < FD_SETSIZE; ++i)

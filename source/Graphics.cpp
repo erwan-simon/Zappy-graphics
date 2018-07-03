@@ -7,11 +7,12 @@
 #include "Graphics.h"
 #include "Map.h"
 #include "MyNcurses.h"
+#include "Error.h"
+#include "Warning.h"
 
 Graphics::Graphics(int port, char *addr) :
     network(addr, port)
 {
-    ;
     // Get the size of the board
     if (this->network.SendMessage(std::string("300\n")) == false ||
 	    this->network.ReadFromServer(true) == false ||
@@ -20,10 +21,11 @@ Graphics::Graphics(int port, char *addr) :
 	    this->map == NULL)
     {
         this->network.SendMessage(std::string("003 Got an error need to shut down.\n"));
-	throw std::string("Can't get the map size from the server");
+        std::string error = "Can't get the map size from the server";
+	throw Error(error);
     }
     this->network.ClearBuffer();
-    this->ncurse.OpenWindow(this->map->GetSizeX(), this->map->GetSizeY());
+    // this->ncurse.OpenWindow(this->map->GetSizeX(), this->map->GetSizeY());
     // Get board
     if (network.SendMessage(std::string("301\n")) == false ||
 	    this->network.ReadFromServer(true) == false ||
@@ -31,8 +33,9 @@ Graphics::Graphics(int port, char *addr) :
 	    this->ReceiveBoard(*(this->network.GetBuffer().begin())) == false)
     {
         this->network.SendMessage(std::string("003 Got an error need to shut down.\n"));
-	this->ncurse.CloseWindow();
-	throw std::string("Can't get the board contents from the server");
+	//this->ncurse.CloseWindow();
+        std::string error = "Can't get the board contents from the server";
+	throw Error(error);
     }
     this->network.ClearBuffer();
     // get characters
@@ -42,8 +45,9 @@ Graphics::Graphics(int port, char *addr) :
 	    this->ReceiveCharacters(*(this->network.GetBuffer().begin())) == false)
     {
         this->network.SendMessage(std::string("003 Got an error need to shut down.\n"));
-	this->ncurse.CloseWindow();
-	throw std::string("Can't get the characters from the server");
+	// this->ncurse.CloseWindow();
+        std::string error = "Can't get the characters from the server";
+	throw Error(error);
     }
     this->network.ClearBuffer();
 }
@@ -53,7 +57,7 @@ bool 	Graphics::Play()
     while (1)
     {
 	// std::this_thread::sleep_for(std::chrono::milliseconds(500));
-	if (this->AskForUpdate() || this->network.ReadFromServer() == false)
+	if (this->AskForUpdate() == false || this->network.ReadFromServer() == false)
 	    break;
 	if (this->network.GetBuffer().size() != 0)
 	{
@@ -63,6 +67,7 @@ bool 	Graphics::Play()
 	    this->DrawBoard();
 	}
     }
+    std::cout << "Server disconnected" << std::endl;
     return true;
 }
 
@@ -71,29 +76,26 @@ bool	Graphics::Ok(std::string &)
     return true;
 }
 
-bool	Graphics::Error(std::string & value)
+bool    	Graphics::Error(std::string & value)
 {
-    try {
-	std::cerr << "Error: " << value.substr(4) << std::endl;
-        throw value.substr(4);
-    }
-    catch (std::out_of_range& e)
-    {
-	throw std::string("Server send an error code without explaining why.");
-    }
+    std::string error;
+
+    if (value.size() < 5)
+        error = "Server send an error code";
+    else
+        error = "Server send " + value.substr(4);
+    throw Warning(error);
 }
 
-bool	Graphics::Exit(std::string & value)
+bool	        Graphics::Exit(std::string & value)
 {
-    try {
-	std::string message = std::string("Server disconnected ");
-	message += value.substr(4);
-	throw message;
-    }
-    catch (std::out_of_range& e)
-    {
-	throw std::string("Server disconnected itself.");
-    }
+    std::string error;
+
+    if (value.size() < 5)
+        error = "Server disconnected";
+    else
+        error = "Server disconnected: " + value.substr(4);
+    throw Error(error);
 }
 
 bool	Graphics::ServerWelcome(std::string & value)
@@ -205,6 +207,7 @@ bool    Graphics::ReceiveCharacters(std::string &argument)
 
 void 	Graphics::DrawBoard()
 {
+    /*
     Box **board_copy = this->map->GetBoard();
 
     for (int y = 0; y != this->map->GetSizeY(); y += 1)
@@ -229,6 +232,7 @@ void 	Graphics::DrawBoard()
 	}
     }
     this->ncurse.RefreshWindow();
+    */
 }
 
 bool 	Graphics::AskForUpdate()
@@ -239,7 +243,7 @@ bool 	Graphics::AskForUpdate()
 
 Graphics::~Graphics()
 {
-    this->ncurse.ClearWindow();
-    this->ncurse.CloseWindow();
+    // this->ncurse.ClearWindow();
+    // this->ncurse.CloseWindow();
     this->network.SendMessage(std::string("003\n"));
 }

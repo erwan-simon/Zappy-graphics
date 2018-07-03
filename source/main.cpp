@@ -1,6 +1,7 @@
 #include <cstdio>
 #include <iostream>
 #include "Graphics.h"
+#include "Error.h"
 
 int main(int argc, char *argv[])
 {
@@ -12,9 +13,9 @@ int main(int argc, char *argv[])
     try {
 	Graphics graphics(std::atoi(argv[2]), argv[1]);
 	graphics.Play();
-    } catch (std::string e)
+    } catch (Error &e)
     {
-	std::cerr << "Error: " << e << std::endl;
+	std::cerr << "Error: " << e.what() << std::endl;
 	return 1;
     }
     return 0;
